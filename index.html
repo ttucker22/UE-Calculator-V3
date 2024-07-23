@@ -126,6 +126,63 @@ button:hover {
     margin-top: 20px;
     font-size: 0.9em;
 }
+.arthroplasty-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.arthroplasty-option {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+.arthroplasty-option:hover {
+    background-color: #f0f0f0;
+}
+.arthroplasty-option input[type="radio"] {
+    display: none;
+}
+.arthroplasty-option label {
+    cursor: pointer;
+    padding-left: 25px;
+    position: relative;
+}
+.arthroplasty-option label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border: 2px solid #1E90FF;
+    border-radius: 50%;
+}
+.arthroplasty-option input[type="radio"]:checked + label::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    background-color: #1E90FF;
+    border-radius: 50%;
+}
+.arthroplasty-option input[type="radio"]:checked + label {
+    color: #1E90FF;
+    font-weight: bold;
+}
+.arthroplasty-option input[type="radio"]:checked + label::before {
+    border-color: #1E90FF;
+}
+.arthroplasty-option input[type="radio"]:checked + label::after {
+    background-color: #1E90FF;
+}
     .total-impairment {
     font-weight: bold;
     margin-top: 10px;
@@ -1049,6 +1106,29 @@ function showCalculators() {
                         <p>Reference: Table 16-35 on p. 510 of The AMA Guides 5th Edition</p>
                     </div>
                 `;
+                } else if (cardValue === 'shoulder' && option === 'Arthroplasty') {
+    calculatorCard.innerHTML = `
+        <h3>Shoulder - Arthroplasty</h3>
+        <div class="arthroplasty-options">
+            <div class="arthroplasty-option" data-value="30">
+                <input type="radio" id="total-shoulder-resection" name="shoulder-arthroplasty" value="30">
+                <label for="total-shoulder-resection">Total Shoulder Resection Arthroplasty</label>
+            </div>
+            <div class="arthroplasty-option" data-value="24">
+                <input type="radio" id="total-shoulder-implant" name="shoulder-arthroplasty" value="24">
+                <label for="total-shoulder-implant">Total Shoulder Implant Arthroplasty</label>
+            </div>
+            <div class="arthroplasty-option" data-value="10">
+                <input type="radio" id="distal-clavicle-resection" name="shoulder-arthroplasty" value="10">
+                <label for="distal-clavicle-resection">Distal Clavicle Resection Arthroplasty</label>
+            </div>
+            <div class="arthroplasty-option" data-value="3">
+                <input type="radio" id="proximal-clavicle-resection" name="shoulder-arthroplasty" value="3">
+                <label for="proximal-clavicle-resection">Proximal Clavicle Resection Arthroplasty</label>
+            </div>
+        </div>
+        <p class="total-impairment"><strong>Total: <span id="shoulder-arthroplasty-total">0 UE = 0 WPI</span></strong></p>
+    `;
             } else {
                 calculatorCard.innerHTML = `
                     <h3>${cardValue.charAt(0).toUpperCase() + cardValue.slice(1)} - ${option}</h3>
@@ -1087,6 +1167,14 @@ function setupCalculatorEventListeners() {
     }
 }
 
+    // Set up event listeners for shoulder arthroplasty inputs
+if (selectedOptions.shoulder && selectedOptions.shoulder.includes('Arthroplasty')) {
+    const arthroplastyOptions = document.querySelectorAll('input[name="shoulder-arthroplasty"]');
+    arthroplastyOptions.forEach(option => {
+        option.addEventListener('change', calculateShoulderArthroplasty);
+    });
+}
+
 function calculateShoulderROM() {
     updateShoulderImpairment();
 }
@@ -1109,6 +1197,17 @@ function calculateShoulderStrength(movement, inputType) {
     }
 
     updateTotalShoulderStrengthImpairment();
+}
+
+    function calculateShoulderArthroplasty() {
+    const selectedOption = document.querySelector('input[name="shoulder-arthroplasty"]:checked');
+    if (selectedOption) {
+        const ueImpairment = parseInt(selectedOption.value);
+        const wpi = Math.round(ueImpairment * 0.6);
+        document.getElementById('shoulder-arthroplasty-total').textContent = `${ueImpairment} UE = ${wpi} WPI`;
+    } else {
+        document.getElementById('shoulder-arthroplasty-total').textContent = '0 UE = 0 WPI';
+    }
 }
 
 function updateTotalShoulderStrengthImpairment() {
