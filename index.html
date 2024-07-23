@@ -1110,6 +1110,9 @@ function showCalculators() {
     calculatorCard.innerHTML = `
         <h3>Shoulder - Arthroplasty</h3>
         <div class="arthroplasty-options">
+            <script>
+                console.log("Arthroplasty options:", document.querySelectorAll('input[name="shoulder-arthroplasty"]').length);
+            </script>
             <div class="arthroplasty-option" data-value="30">
                 <input type="radio" id="total-shoulder-resection" name="shoulder-arthroplasty" value="30">
                 <label for="total-shoulder-resection">Total Shoulder Resection Arthroplasty</label>
@@ -1143,6 +1146,7 @@ function showCalculators() {
                 `;
             }
             calculatorsList.appendChild(calculatorCard);
+            setupCalculatorEventListeners();
         });
     }
 }
@@ -1165,13 +1169,15 @@ function setupCalculatorEventListeners() {
             document.getElementById(`shoulder-${movement}-strength-imp`).addEventListener('input', (e) => calculateShoulderStrength(movement, 'imp'));
         });
     }
-}
 
     // Set up event listeners for shoulder arthroplasty inputs
 if (selectedOptions.shoulder && selectedOptions.shoulder.includes('Arthroplasty')) {
+    console.log("Setting up arthroplasty event listeners");
     const arthroplastyOptions = document.querySelectorAll('input[name="shoulder-arthroplasty"]');
+    console.log("Number of arthroplasty options found:", arthroplastyOptions.length);
     arthroplastyOptions.forEach(option => {
         option.addEventListener('change', calculateShoulderArthroplasty);
+        console.log("Added event listener to option:", option.value);
     });
 }
 
@@ -1200,6 +1206,7 @@ function calculateShoulderStrength(movement, inputType) {
 }
 
 function calculateShoulderArthroplasty() {
+    console.log("calculateShoulderArthroplasty function called");
     const selectedOption = document.querySelector('input[name="shoulder-arthroplasty"]:checked');
     const totalElement = document.getElementById('shoulder-arthroplasty-total');
     
