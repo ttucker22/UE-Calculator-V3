@@ -1127,17 +1127,21 @@ function showCalculators() {
             setupCalculatorEventListeners();
         }
 
-        function setupCalculatorEventListeners() {
-            console.log("Setting up calculator event listeners");
-            if (selectedOptions.shoulder && selectedOptions.shoulder.includes('ROM')) {
-                const shoulderInputs = ['flexion', 'extension', 'abduction', 'adduction', 'internal-rotation', 'external-rotation', 'ankylosis-fe', 'ankylosis-aa', 'ankylosis-ie'];
-                shoulderInputs.forEach(input => {
-                    const element = document.getElementById(`shoulder-${input}`);
-                    if (element) {
-                        element.addEventListener('input', calculateShoulderROM);
-                    }
-                });
+function setupCalculatorEventListeners() {
+    console.log("Setting up calculator event listeners");
+    
+    if (selectedOptions.shoulder && selectedOptions.shoulder.includes('ROM')) {
+        const shoulderInputs = ['flexion', 'extension', 'abduction', 'adduction', 'internal-rotation', 'external-rotation', 'ankylosis-fe', 'ankylosis-aa', 'ankylosis-ie'];
+        shoulderInputs.forEach(input => {
+            const element = document.getElementById(`shoulder-${input}`);
+            if (element) {
+                element.addEventListener('input', calculateShoulderROM);
+                console.log(`Added event listener for shoulder-${input}`);
+            } else {
+                console.log(`Element not found: shoulder-${input}`);
             }
+        });
+    }
 
             if (selectedOptions.shoulder && selectedOptions.shoulder.includes('Strength')) {
                 const movements = ['flexion', 'extension', 'abduction', 'adduction', 'internal-rotation', 'external-rotation'];
@@ -1164,9 +1168,10 @@ function showCalculators() {
             }
         }
 
-        function calculateShoulderROM() {
-            updateShoulderImpairment();
-        }
+function calculateShoulderROM() {
+    console.log("Calculating Shoulder ROM");
+    updateShoulderImpairment();
+}
 
         function calculateShoulderStrength(movement, inputType) {
             const deficitInput = document.getElementById(`shoulder-${movement}-strength-deficit`);
@@ -1217,9 +1222,88 @@ function showCalculators() {
         }
 
         function updateShoulderImpairment() {
-            // Implementation of updateShoulderImpairment function
-            // This would use the ROM data arrays to calculate impairment
+    console.log("Updating Shoulder Impairment");
+    const movements = [
+        { name: 'flexion', dataArray: SHOULDERFlexionExtensionData, group: 'fe' },
+        { name: 'extension', dataArray: SHOULDERFlexionExtensionData, group: 'fe' },
+        { name: 'abduction', dataArray: SHOULDERAbductionAdductionData, group: 'aa' },
+        { name: 'adduction', dataArray: SHOULDERAbductionAdductionData, group: 'aa' },
+        { name: 'internal-rotation', dataArray: SHOULDERInternalExternalRotationData, field: 'internalRotation', group: 'ie' },
+        { name: 'external-rotation', dataArray: SHOULDERInternalExternalRotationData, field: 'externalRotation', group: 'ie' }
+    ];
+
+    let impairments = {
+        fe: { normal: 0, ankylosis: 0 },
+        aa: { normal: 0, ankylosis: 0 },
+        ie: { normal: 0, ankylosis: 0 }
+    };
+
+    movements.forEach(movement => {
+        const angleInput = document.getElementById(`shoulder-${movement.name}`);
+        const impOutput = document.getElementById(`shoulder-${movement.name}-imp`);
+        const angle = angleInput.value !== '' ? parseInt(angleInput.value) : null;
+
+        if (angle !== null) {
+            const imp = findImpairment(angle, movement.dataArray, movement.field || movement.name);
+            impOutput.textContent = imp;
+            impairments[movement.group].normal += imp;
+        } else {
+            impOutput.textContent = '';
         }
+    });
+
+    // Handle ankylosis
+    ['fe', 'aa', 'ie'].forEach(group => {
+        const ankylosisInput = document.getElementById(`shoulder-ankylosis-${group}`);
+        const ankylosisImpOutput = document.getElementById(`shoulder-ankylosis-${group}-imp`);
+        const ankylosisAngle = ankylosisInput.value !== '' ? parseInt(ankylosisInput.value) : null;
+
+        if (ankylosisAngle !== null) {
+            const dataArray = group === 'fe' ? SHOULDERFlexionExtensionData :
+                              group === 'aa' ? SHOULDERAbductionAdductionData :
+                              SHOULDERInternalExternalRotationData;
+            const imp = findImpairment(ankylosisAngle, dataArray, 'ankylosis');
+            ankylosisImpOutput.textContent = imp;
+            impairments[group].ankylosis = imp;
+        } else {
+            ankylosisImpOutput.textContent = '';
+        }
+    });
+
+    // Calculate and update subtotals
+    let totalImp = 0;
+    ['fe', 'aa', 'ie'].forEach(group => {
+        const subtotal = Math.max(impairments[group].normal, impairments[group].ankylosis);
+        document.getElementById(`shoulder-${group}-imp`).textContent = subtotal;
+        totalImp += subtotal;
+    });
+
+    // Calculate total shoulder impairment
+    const wpi = Math.round(totalImp * 0.6);
+
+    document.getElementById('shoulder-rom-total').textContent = totalImp;
+    document.getElementById('shoulder-rom-wpi').textContent = wpi;
+}
+
+function findImpairment(angle, dataArray, angleField) {
+    let impairment = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+        let dataAngle = dataArray[i][angleField];
+        if (typeof dataAngle === 'string') {
+            if (dataAngle.startsWith('<') && angle <= parseInt(dataAngle.slice(1))) {
+                impairment = dataArray[i]['ue' + angleField.charAt(0).toUpperCase() + angleField.slice(1)];
+                break;
+            } else if (dataAngle.startsWith('>') && angle >= parseInt(dataAngle.slice(1))) {
+                impairment = dataArray[i]['ue' + angleField.charAt(0).toUpperCase() + angleField.slice(1)];
+                break;
+            }
+        } else if (angle === dataAngle) {
+            impairment = dataArray[i]['ue' + angleField.charAt(0).toUpperCase() + angleField.slice(1)];
+            break;
+        }
+    }
+    return impairment;
+}
 
         finalizeImpairmentBtn.addEventListener('click', () => {
             console.log("Finalize Impairment button clicked");
