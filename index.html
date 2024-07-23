@@ -1199,14 +1199,16 @@ function calculateShoulderStrength(movement, inputType) {
     updateTotalShoulderStrengthImpairment();
 }
 
-    function calculateShoulderArthroplasty() {
+function calculateShoulderArthroplasty() {
     const selectedOption = document.querySelector('input[name="shoulder-arthroplasty"]:checked');
+    const totalElement = document.getElementById('shoulder-arthroplasty-total');
+    
     if (selectedOption) {
         const ueImpairment = parseInt(selectedOption.value);
         const wpi = Math.round(ueImpairment * 0.6);
-        document.getElementById('shoulder-arthroplasty-total').textContent = `${ueImpairment} UE = ${wpi} WPI`;
+        totalElement.textContent = `${ueImpairment} UE = ${wpi} WPI`;
     } else {
-        document.getElementById('shoulder-arthroplasty-total').textContent = '0 UE = 0 WPI';
+        totalElement.textContent = '0 UE = 0 WPI';
     }
 }
 
